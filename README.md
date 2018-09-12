@@ -8,8 +8,8 @@ structure that can be ingested into [SAFLII](http://www.saflii.org/) by pulling 
 1. Clone it from GitHub:
 
     ```bash
-    git clone https://github.com/Code4SA/openbylaws-saflii.git
-    cd openbylaws-saflii
+    git https://github.com/africanlii/saflii-acts-download.git
+    cd saflii-acts-download
     ```
 
 2. Install dependencies using [pip](https://pip.pypa.io/en/stable/):
