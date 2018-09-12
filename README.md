@@ -1,7 +1,7 @@
-# openbylaws-saflii
+# acts-saflii
 
-This a script to archive the documents on [openbylaws.org.za](http://openbylaws.org.za) into a
-structure that can be ingested into [SAFLII](http://www.saflii.org/) by pulling them from the Open By-laws Indigo server at [indigo.openbylaws.org.za](https://indigo.openbylaws.org.za).
+This is a script to archive the documents on [indigo.africanlii.org] into a
+structure that can be ingested into [SAFLII](http://www.saflii.org/) by pulling them from the Indigo server at [indigo.africanlii.org](https://indigo.africanlii.org).
 
 ## Using this script
 
@@ -32,7 +32,7 @@ structure that can be ingested into [SAFLII](http://www.saflii.org/) by pulling 
 When there's a new version, just use ``git pull`` to update:
 
 ```bash
-cd openyblaws-saflii
+cd saflii-legislation
 git pull
 ```
 
