@@ -11,20 +11,8 @@ import urlparse
 import click
 
 
-API_ENDPOINT = os.environ.get('INDIGO_API_URL', "http://indigo.africanlii.org/api")
+API_ENDPOINT = os.environ.get('INDIGO_API_URL', "https://indigo.africanlii.org/api")
 BASE_DIR = os.getcwd()
-#REGIONS = {
- #   'za-legislation': "South African Legislation",
-    #'za-eth': "eThekwini",
-    #'za-jhb': "City of Johannesburg",
-#}
-
-REGIONS = {
-   'za-legislation': "South African Legislation"
-    
-}
-
-
 session = requests.Session()
 session.verify = False
 
@@ -38,11 +26,11 @@ def mkdir_p(path):
         pass
 
 
-def download_doc(uri, doc, target):
+def download_doc(doc, target):
     """ Download this document.
     """
     path = os.path.join(target, "Data")
-    click.echo("Fetching: %s -> %s" % (uri, path))
+    click.echo("Fetching: %s -> %s" % (doc['expression_frbr_uri'], path))
     mkdir_p(path)
 
     doc['base_filename'] = base_filename(doc)
@@ -78,48 +66,57 @@ def write_registry(docs, target):
     with codecs.open(fname, 'w', 'utf-8') as f:
         for doc in docs:
             title = doc['title']
-            f.write("\"%s.html\" (%s) %s\n" % (doc['base_filename'], doc['publication_date'], title))
+            title = title + " (Act %s of %s)" % (doc['number'], doc['year'])
+            f.write("\"%s.html\" (%s) \"%s\"\n" % (doc['base_filename'], doc['publication_date'], title))
 
 
-def get_remote_documents(url):
-    resp = session.get(url + '.json')
-    resp.raise_for_status()
-    docs = resp.json()['results']
+def get_remote_documents(url, region):
+    url = url + '/' + region + '/.json'
+    docs = []
+
+    while url:
+        resp = session.get(url)
+        resp.raise_for_status()
+        data = resp.json()
+        docs.extend(data['results'])
+        url = data['next']
+
     return docs
 
 
-def expression_uri(doc):
-    return '/'.join([doc['frbr_uri'], doc['language'], doc['expression_date'] or doc['publication_date']])
+def fetch_region(base_url, region, target):
+    click.echo("Archiving documents from %s to %s" % (base_url, target))
 
+    docs = get_remote_documents(base_url, region)
+    # filter to just acts
+    docs = [d for d in docs if not d['subtype']]
 
-def fetch(url, target):
-    click.echo("Archiving documents from %s to %s" % (url, target))
-
-    docs = get_remote_documents(url)
-    docs = {expression_uri(d): d for d in docs}
     click.echo("Documents: %d" % len(docs))
+    for doc in docs:
+        download_doc(doc, target)
 
-    for uri, doc in docs.iteritems():
-        download_doc(uri, doc, target)
+    return docs
 
-    return docs.values()
+
+def setup_session():
+    with open("indigo-api-token", "r") as f:
+        token = f.read().strip()
+        session.headers.update({'Authorization': 'Token %s' % token})
 
 
 @click.command()
 @click.option('--target', default='.', help='Target directory')
 @click.option('--url', default=API_ENDPOINT, help='Indigo API URL (%s)' % API_ENDPOINT)
-@click.option('--regions', help='Comma-separated region codes (ALL, za-cpt, za-eth, etc.)')
-
+@click.option('--regions', help='Comma-separated region codes (za, zm, etc.)')
 def main(target, url, regions):
-    if regions == "ALL":
-        regions = REGIONS.keys()
-    else:
-        regions = [r.lower() for r in regions.split(",")]
+    regions = [r.lower() for r in regions.split(",")]
     click.echo("Regions: " + ", ".join(regions))
+
+    setup_session()
 
     all_docs = []
     for region in regions:
-        all_docs.extend(fetch(url + "/" + region, target))
+        all_docs.extend(fetch_region(url, region, target))
 
     write_registry(all_docs, target)
 
