@@ -67,7 +67,7 @@ def write_registry(docs, target):
         for doc in docs:
             title = doc['title']
             title = title + " (Act %s of %s)" % (doc['number'], doc['year'])
-            f.write("\"%s.html\" (%s) \"%s\"\n" % (doc['base_filename'], doc['publication_date'], title))
+            f.write("\"%s.html\" (%s) %s\n" % (doc['base_filename'], doc['publication_date'], title))
 
 
 def get_remote_documents(url, region):
