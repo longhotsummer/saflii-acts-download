@@ -42,7 +42,7 @@ def download_doc(doc, target):
         if link:
             link = link[0]
 
-            resp = session.get(link['href'])
+            resp = session.get(link['href'], params={'resolver': 'saflii.org'})
             resp.raise_for_status()
 
             fname = urlparse.urlsplit(link['href']).path
